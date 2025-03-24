@@ -18,5 +18,13 @@ void test_validate_my_username()
      * TODO: Replace the line below with your code here as described above to verify your /conf/username.txt 
      * config file and my_username() functions are setup properly
      */
-    TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");
+     
+	const char* user_git = my_username();
+
+	// To test if assertion fails
+        //const char user_git[] =  "wrong_user_name";
+        const char* user_conf = malloc_username_from_conf_file();
+        TEST_ASSERT_EQUAL_STRING_MESSAGE(user_git, user_conf, "all definitely not good");
+	
+    //TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please help me!");
 }
