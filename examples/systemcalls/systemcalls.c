@@ -16,8 +16,12 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    // Call system() with the given command
+    int ret = system(cmd);
 
-    return true;
+    // Check if the system() call was successful (returned 0)
+    return (ret == 0);
+   // return true;
 }
 
 /**
@@ -59,9 +63,25 @@ bool do_exec(int count, ...)
  *
 */
 
-    va_end(args);
+    pid_t pid = fork(); // create a new process
+    if (pid == 0) {
+        // child process: run the command
+        execv(command[0], command);
+        // if execv fails, exit with error
+        exit(1);
+    } else if (pid > 0) {
+        // parent process: wait for the child to finish
+        int status;
+        waitpid(pid, &status, 0);
+        va_end(args);
+        // return true if child exited successfully
+        return (WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    } else {
+        // fork failed
+        va_end(args);
+        return false;
+    }
 
-    return true;
 }
 
 /**
@@ -93,7 +113,37 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-    va_end(args);
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
 
-    return true;
+        // Open the output file with write permissions, create it if it doesn't exist, truncate it if it does
+        int fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd < 0) {
+            exit(1); // If open fails
+        }
+
+        // Redirect stdout to the file
+        dup2(fd, STDOUT_FILENO);
+        close(fd); // Close original fd after dup2
+
+        // Execute the command
+        execv(command[0], command);
+
+        // If execv fails
+        exit(1);
+    }
+    else if (pid > 0) {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+        va_end(args);
+        return (WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    }
+    else {
+        // Fork failed
+        va_end(args);
+        return false;
+    }
+    
 }
