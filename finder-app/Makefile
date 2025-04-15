@@ -15,4 +15,4 @@ writer.o: writer.c
 
 clean:
 	rm -f writer
-	rm *.o
+	rm -f *.o
